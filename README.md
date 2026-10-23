@@ -11,10 +11,10 @@ Uporabniške vloge: **član**, **skrbnik opreme** in **administrator**.
 | Frontend | Vue 3, Vue Router, Vite, Bootstrap 6 (alpha) |
 | Backend | Node.js, Express (REST API, JSON) |
 | Podatkovna baza | PostgreSQL 18 (`pg`, brez ORM) |
-| Avtentikacija | `express-session`, `connect-pg-simple`, `bcrypt` |
-| Zaščita in validacija | `helmet`, `express-validator` |
+| Avtentikacija | `express-session`, `bcrypt` |
+| Zaščita in validacija | `express-validator` |
 | QR kode | `qrcode`, `qr-scanner` |
-| Razvoj in testiranje | Docker Compose (baza), `nodemon`, `dotenv`, `node:test` |
+| Razvoj in testiranje | Compose, `nodemon`, `dotenv`, `node:test` |
 
 ## Dokumentacija
 
