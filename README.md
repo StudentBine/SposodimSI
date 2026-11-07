@@ -28,14 +28,22 @@ Uporabniške vloge: **član**, **skrbnik opreme** in **administrator**.
 
 ## Lokalni zagon
 
-Zagon: `docker compose up -d` (ob prvem zagonu se ustvarijo tabele in testni podatki).
-
-Testni uporabniki (geslo `geslo123`): `admin@sposodimsi.si`, `skrbnik@sposodimsi.si`, `clan@sposodimsi.si`, `maja@sposodimsi.si`, `blokiran@sposodimsi.si` (blokiran).
-
-Frontend (v drugem terminalu):
+1. Baza: `docker compose up -d`
+2. Backend:
+   ```bash
+   cd backend
+   cp .env.example .env
+   npm install
+   npm run dev
+   ```
+   API teče na `http://localhost:3000`, preizkus: `http://localhost:3000/api/health`.
+3. Frontend (v drugem terminalu):
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
-Aplikacija teče na `http://localhost:5173`, zahteve na `/api` Vite posreduje backendu.
+   Aplikacija teče na `http://localhost:5173`, zahteve na `/api` Vite posreduje backendu.
+4. Testi backenda: `cd backend && npm test`.
+
+Testni uporabniki (geslo `geslo123`): `admin@sposodimsi.si`, `skrbnik@sposodimsi.si`, `clan@sposodimsi.si`, `maja@sposodimsi.si`, `blokiran@sposodimsi.si` (vrne obvestilo, da je račun blokiran - testirano).
