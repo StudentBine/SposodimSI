@@ -25,3 +25,9 @@ Uporabniške vloge: **član**, **skrbnik opreme** in **administrator**.
 - [05 – Uporabniške zgodbe](docs/05-uporabniske-zgodbe.md)
 - [05 – Wireframes](docs/05-wireframes.md)
 - [Arhitekturne odločitve (ADR)](docs/adr/)
+
+## Lokalni zagon
+
+Zagon: `docker compose up -d` (ob prvem zagonu se ustvarijo tabele in testni podatki).
+
+Testni uporabniki (geslo `geslo123`): `admin@sposodimsi.si`, `skrbnik@sposodimsi.si`, `clan@sposodimsi.si`, `maja@sposodimsi.si`, `blokiran@sposodimsi.si` (blokiran).
