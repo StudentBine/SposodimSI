@@ -31,3 +31,11 @@ Uporabniške vloge: **član**, **skrbnik opreme** in **administrator**.
 Zagon: `docker compose up -d` (ob prvem zagonu se ustvarijo tabele in testni podatki).
 
 Testni uporabniki (geslo `geslo123`): `admin@sposodimsi.si`, `skrbnik@sposodimsi.si`, `clan@sposodimsi.si`, `maja@sposodimsi.si`, `blokiran@sposodimsi.si` (blokiran).
+
+Frontend (v drugem terminalu):
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+Aplikacija teče na `http://localhost:5173`, zahteve na `/api` Vite posreduje backendu.
