@@ -123,6 +123,13 @@ onMounted(nalozi)
             <button class="btn-solid theme-primary btn-sm me-2" @click="odobri(i)">Odobri</button>
             <button class="btn-outline theme-danger btn-sm" @click="zacniZavrnitev(i)">Zavrni</button>
           </template>
+          <RouterLink
+            v-else-if="i.status === 'odobrena'"
+            :to="`/izposoje/${i.id}/izdaja`"
+            class="btn-solid theme-primary btn-sm"
+          >
+            Izdaj
+          </RouterLink>
         </td>
       </tr>
     </tbody>

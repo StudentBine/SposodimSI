@@ -1,12 +1,23 @@
 import { Router } from 'express';
 import { body, param, query, matchedData } from 'express-validator';
-import { oddajZahtevek, seznamIzposoj, mojeIzposoje, odobri, zavrni } from '../services/izposoje.js';
+import {
+  oddajZahtevek, seznamIzposoj, mojeIzposoje, odobri, zavrni, podrobnostiIzposoje, izdaj,
+} from '../services/izposoje.js';
 import { preveriVnos } from '../middleware/validacija.js';
 import { zahtevajPrijavo, zahtevajVlogo } from '../middleware/avtentikacija.js';
 
 const router = Router();
 const SKRBNIK = zahtevajVlogo('skrbnik', 'admin');
 const preveriId = param('id').isInt({ min: 1 }).toInt().withMessage('Neveljaven id');
+
+// Pravila za oceno in opombo, enaka pri izdaji in vrnitvi
+const preveriZapis = [
+  body('ocena')
+    .isIn(['brez_poskodb', 'manjse_poskodbe', 'poskodovano'])
+    .withMessage('Izberi oceno stanja'),
+  body('opomba').optional({ values: 'falsy' }).isString().trim().isLength({ max: 500 })
+    .withMessage('Opomba ima lahko največ 500 znakov'),
+];
 
 // POST /api/izposoje  { opremaId, od, do, namen } – oddaja zahtevka
 router.post(
@@ -65,5 +76,16 @@ router.post(
     res.json(await zavrni(id, req.session.uporabnik.id, razlog));
   }
 );
+
+// GET /api/izposoje/:id – podrobnosti z zapisi stanja
+router.get('/:id', SKRBNIK, preveriId, preveriVnos, async (req, res) => {
+  res.json(await podrobnostiIzposoje(matchedData(req).id));
+});
+
+// POST /api/izposoje/:id/izdaja  { ocena, opomba }
+router.post('/:id/izdaja', SKRBNIK, preveriId, preveriZapis, preveriVnos, async (req, res) => {
+  const { id, ocena, opomba } = matchedData(req);
+  res.json(await izdaj(id, req.session.uporabnik.id, { ocena, opomba }));
+});
 
 export default router;

@@ -12,3 +12,9 @@ export const STANJA = {
   izdana: 'Izdana',
   vrnjena: 'Vrnjena',
 }
+
+export const OCENE = {
+  brez_poskodb: 'Brez poškodb',
+  manjse_poskodbe: 'Manjše poškodbe',
+  poskodovano: 'Poškodovano',
+}
