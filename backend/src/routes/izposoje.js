@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body, param, query, matchedData } from 'express-validator';
 import {
-  oddajZahtevek, seznamIzposoj, mojeIzposoje, odobri, zavrni, podrobnostiIzposoje, izdaj, vrni,
+  oddajZahtevek, seznamIzposoj, mojeIzposoje, odobri, zavrni, podrobnostiIzposoje, izdaj, vrni, zamude,
 } from '../services/izposoje.js';
 import { preveriVnos } from '../middleware/validacija.js';
 import { zahtevajPrijavo, zahtevajVlogo } from '../middleware/avtentikacija.js';
@@ -53,6 +53,11 @@ router.get(
     res.json(await seznamIzposoj(matchedData(req).status));
   }
 );
+
+// GET /api/izposoje/zamude – izdane izposoje po roku, največja zamuda najprej
+router.get('/zamude', SKRBNIK, async (req, res) => {
+  res.json(await zamude());
+});
 
 // GET /api/izposoje/moje – izposoje prijavljenega uporabnika
 router.get('/moje', zahtevajPrijavo, async (req, res) => {

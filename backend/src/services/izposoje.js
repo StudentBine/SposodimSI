@@ -226,3 +226,20 @@ export async function vrni(id, skrbnikId, { ocena, opomba }) {
     return rezultat.rows[0];
   });
 }
+
+// US-07: zamujene izposoje. Zamuda se izračuna ob vsakem klicu, zato je ni treba nikjer shranjevati.
+export async function zamude() {
+  const rezultat = await pool.query(
+    `SELECT i.id, i.termin_do,
+            o.naziv AS oprema, o.inventarna_st,
+            u.ime || ' ' || u.priimek AS clan, u.email,
+            -- začet dan zamude šteje kot cel dan
+            CEIL(EXTRACT(EPOCH FROM now() - i.termin_do) / 86400)::int AS dni_zamude
+     FROM izposoja i
+     JOIN oprema o ON o.id = i.oprema_id
+     JOIN uporabnik u ON u.id = i.clan_id
+     WHERE i.status = 'izdana' AND i.termin_do < now()
+     ORDER BY i.termin_do`
+  );
+  return rezultat.rows;
+}
