@@ -23,6 +23,7 @@ async function odjaviSe() {
         <RouterLink class="nav-link" to="/moje">Moje izposoje</RouterLink>
         <template v-if="jeSkrbnik">
           <RouterLink class="nav-link" to="/zahtevki">Zahtevki</RouterLink>
+          <RouterLink class="nav-link" to="/zamude">Zamude</RouterLink>
         </template>
       </div>
 
