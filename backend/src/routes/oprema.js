@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { query, matchedData } from 'express-validator';
-import { katalog, seznamKategorij } from '../services/oprema.js';
+import { query, param, matchedData } from 'express-validator';
+import { katalog, seznamKategorij, podrobnosti } from '../services/oprema.js';
 import { preveriVnos } from '../middleware/validacija.js';
 import { zahtevajPrijavo } from '../middleware/avtentikacija.js';
 
@@ -42,5 +42,16 @@ router.get(
 router.get('/kategorije', zahtevajPrijavo, async (req, res) => {
   res.json(await seznamKategorij());
 });
+
+// GET /api/oprema/:id
+router.get(
+  '/:id',
+  zahtevajPrijavo,
+  param('id').isInt({ min: 1 }).toInt().withMessage('Neveljaven id'),
+  preveriVnos,
+  async (req, res) => {
+    res.json(await podrobnosti(matchedData(req).id));
+  }
+);
 
 export default router;

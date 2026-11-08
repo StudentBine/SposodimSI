@@ -115,6 +115,9 @@ onMounted(async () => {
             <span class="badge" :class="oznaka(oprema) === 'Prosto' ? 'theme-success' : 'theme-secondary'">
               {{ oznaka(oprema) }}
             </span>
+            <div class="mt-3">
+              <RouterLink :to="'/oprema/' + oprema.id" class="btn-outline theme-primary btn-sm">Podrobnosti</RouterLink>
+            </div>
           </div>
         </div>
       </div>
