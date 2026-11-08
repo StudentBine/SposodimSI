@@ -5,6 +5,7 @@ import connectPgSimple from 'connect-pg-simple';
 import { pool } from './db.js';
 import healthRouter from './routes/health.js';
 import authRouter from './routes/auth.js';
+import opremaRouter from './routes/oprema.js';
 import { niNajdeno, obdelajNapako } from './napake.js';
 
 const app = express();
@@ -29,6 +30,8 @@ app.use(
 
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/oprema', opremaRouter);
+
 
 app.use(niNajdeno);
 app.use(obdelajNapako);

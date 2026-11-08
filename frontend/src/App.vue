@@ -14,6 +14,7 @@ async function odjaviSe() {
   <nav class="navbar navbar-expand border-bottom mb-4">
     <div class="container">
       <RouterLink class="navbar-brand" to="/">SposodimSI</RouterLink>
+      <RouterLink v-if="uporabnik" class="nav-link me-auto" to="/">Katalog</RouterLink>
 
       <div v-if="uporabnik" class="d-flex align-items-center gap-3">
         <span>{{ uporabnik.ime }} {{ uporabnik.priimek }} ({{ uporabnik.vloga }})</span>
