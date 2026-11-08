@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body, param, query, matchedData } from 'express-validator';
 import {
-  oddajZahtevek, seznamIzposoj, mojeIzposoje, odobri, zavrni, podrobnostiIzposoje, izdaj,
+  oddajZahtevek, seznamIzposoj, mojeIzposoje, odobri, zavrni, podrobnostiIzposoje, izdaj, vrni,
 } from '../services/izposoje.js';
 import { preveriVnos } from '../middleware/validacija.js';
 import { zahtevajPrijavo, zahtevajVlogo } from '../middleware/avtentikacija.js';
@@ -86,6 +86,12 @@ router.get('/:id', SKRBNIK, preveriId, preveriVnos, async (req, res) => {
 router.post('/:id/izdaja', SKRBNIK, preveriId, preveriZapis, preveriVnos, async (req, res) => {
   const { id, ocena, opomba } = matchedData(req);
   res.json(await izdaj(id, req.session.uporabnik.id, { ocena, opomba }));
+});
+
+// POST /api/izposoje/:id/vrnitev  { ocena, opomba }
+router.post('/:id/vrnitev', SKRBNIK, preveriId, preveriZapis, preveriVnos, async (req, res) => {
+  const { id, ocena, opomba } = matchedData(req);
+  res.json(await vrni(id, req.session.uporabnik.id, { ocena, opomba }));
 });
 
 export default router;
