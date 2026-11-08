@@ -142,3 +142,56 @@ export async function zavrni(id, skrbnikId, razlog) {
     return rezultat.rows[0];
   });
 }
+
+// Podrobnosti ene izposoje z zapisi stanja (za obrazca izdaje in vrnitve)
+export async function podrobnostiIzposoje(id) {
+  const rezultat = await pool.query(
+    `SELECT i.id, i.termin_od, i.termin_do, i.namen, i.status, i.izdana_ob, i.vrnjena_ob,
+            u.ime || ' ' || u.priimek AS clan,
+            o.naziv AS oprema, o.inventarna_st, o.status AS status_opreme
+     FROM izposoja i
+     JOIN uporabnik u ON u.id = i.clan_id
+     JOIN oprema o ON o.id = i.oprema_id
+     WHERE i.id = $1`,
+    [id]
+  );
+  const izposoja = rezultat.rows[0];
+  if (!izposoja) {
+    throw new ApiNapaka(404, 'NI_NAJDENO', 'Izposoja ne obstaja');
+  }
+
+  const zapisi = await pool.query(
+    `SELECT z.tip, z.ocena, z.opomba, z.zapisano_ob, u.ime || ' ' || u.priimek AS zapisal
+     FROM zapis_stanja z
+     JOIN uporabnik u ON u.id = z.zapisal_id
+     WHERE z.izposoja_id = $1
+     ORDER BY z.zapisano_ob`,
+    [id]
+  );
+  izposoja.zapisi = zapisi.rows;
+  return izposoja;
+}
+
+// US-05: izdaja opreme z zapisom stanja
+export async function izdaj(id, skrbnikId, { ocena, opomba }) {
+  return vTransakciji(async (odjemalec) => {
+    const izposoja = await zakleniIzposojo(odjemalec, id, 'odobrena');
+
+    const oprema = await odjemalec.query('SELECT status FROM oprema WHERE id = $1', [izposoja.oprema_id]);
+    if (oprema.rows[0].status !== 'na_voljo') {
+      throw new ApiNapaka(409, 'OPREMA_NI_IZPOSODLJIVA', 'Oprema trenutno ni izposodljiva');
+    }
+
+    await odjemalec.query(
+      `INSERT INTO zapis_stanja (izposoja_id, zapisal_id, tip, ocena, opomba)
+       VALUES ($1, $2, 'izdaja', $3, $4)`,
+      [id, skrbnikId, ocena, opomba || null]
+    );
+    const rezultat = await odjemalec.query(
+      `UPDATE izposoja SET status = 'izdana', izdana_ob = now()
+       WHERE id = $1 RETURNING id, status, izdana_ob`,
+      [id]
+    );
+    return rezultat.rows[0];
+  });
+}
