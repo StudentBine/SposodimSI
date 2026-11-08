@@ -59,12 +59,22 @@ export async function oddajZahtevek(clanId, { opremaId, od, do: doCas, namen }) 
   return rezultat.rows[0];
 }
 
+// Poškodba: ocena ob vrnitvi je slabša od ocene ob izdaji.
+// Vrednosti enum se primerjajo po vrstnem redu iz sheme (brez_poskodb < manjse_poskodbe < poskodovano).
+const POSKODBA_SQL = `(
+  SELECT vr.ocena > iz.ocena
+  FROM zapis_stanja iz
+  JOIN zapis_stanja vr ON vr.izposoja_id = iz.izposoja_id AND vr.tip = 'vrnitev'
+  WHERE iz.izposoja_id = i.id AND iz.tip = 'izdaja'
+) AS poskodba`;
+
 // Seznam izposoj v izbranem stanju za skrbnika, od najstarejšega zahtevka
 export async function seznamIzposoj(status) {
   const rezultat = await pool.query(
     `SELECT i.id, i.termin_od, i.termin_do, i.namen, i.status, i.ustvarjena_ob,
             u.ime || ' ' || u.priimek AS clan,
-            o.naziv AS oprema, o.inventarna_st
+            o.naziv AS oprema, o.inventarna_st,
+            ${POSKODBA_SQL}
      FROM izposoja i
      JOIN uporabnik u ON u.id = i.clan_id
      JOIN oprema o ON o.id = i.oprema_id
@@ -79,7 +89,8 @@ export async function seznamIzposoj(status) {
 export async function mojeIzposoje(clanId) {
   const rezultat = await pool.query(
     `SELECT i.id, i.termin_od, i.termin_do, i.namen, i.status, i.razlog_zavrnitve, i.ustvarjena_ob,
-            o.naziv AS oprema, o.inventarna_st
+            o.naziv AS oprema, o.inventarna_st,
+            ${POSKODBA_SQL}
      FROM izposoja i
      JOIN oprema o ON o.id = i.oprema_id
      WHERE i.clan_id = $1
@@ -190,6 +201,26 @@ export async function izdaj(id, skrbnikId, { ocena, opomba }) {
     const rezultat = await odjemalec.query(
       `UPDATE izposoja SET status = 'izdana', izdana_ob = now()
        WHERE id = $1 RETURNING id, status, izdana_ob`,
+      [id]
+    );
+    return rezultat.rows[0];
+  });
+}
+
+// US-06: vrnitev opreme z zapisom stanja in primerjavo z izdajo
+export async function vrni(id, skrbnikId, { ocena, opomba }) {
+  return vTransakciji(async (odjemalec) => {
+    await zakleniIzposojo(odjemalec, id, 'izdana');
+
+    await odjemalec.query(
+      `INSERT INTO zapis_stanja (izposoja_id, zapisal_id, tip, ocena, opomba)
+       VALUES ($1, $2, 'vrnitev', $3, $4)`,
+      [id, skrbnikId, ocena, opomba || null]
+    );
+    const rezultat = await odjemalec.query(
+      `UPDATE izposoja i SET status = 'vrnjena', vrnjena_ob = now()
+       WHERE i.id = $1
+       RETURNING i.id, i.status, i.vrnjena_ob, ${POSKODBA_SQL}`,
       [id]
     );
     return rezultat.rows[0];

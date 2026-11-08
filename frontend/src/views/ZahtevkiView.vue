@@ -6,6 +6,8 @@ import { lepDatum } from '../oblika.js'
 const ZAVIHKI = [
   { status: 'zahtevana', naziv: 'Čakajoči' },
   { status: 'odobrena', naziv: 'Odobreni' },
+  { status: 'izdana', naziv: 'Izdani' },
+  { status: 'vrnjena', naziv: 'Vrnjeni' },
 ]
 
 const zavihek = ref('zahtevana')
@@ -130,6 +132,14 @@ onMounted(nalozi)
           >
             Izdaj
           </RouterLink>
+          <RouterLink
+            v-else-if="i.status === 'izdana'"
+            :to="`/izposoje/${i.id}/vrnitev`"
+            class="btn-solid theme-primary btn-sm"
+          >
+            Vrni
+          </RouterLink>
+          <span v-else-if="i.poskodba" class="badge theme-danger">Poškodba</span>
         </td>
       </tr>
     </tbody>

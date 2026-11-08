@@ -38,6 +38,7 @@ onMounted(async () => {
         <td>
           {{ STANJA[i.status] }}
           <div v-if="i.razlog_zavrnitve">Razlog: {{ i.razlog_zavrnitve }}</div>
+          <span v-if="i.poskodba" class="badge theme-danger">Vrnjeno s poškodbo</span>
         </td>
       </tr>
     </tbody>
