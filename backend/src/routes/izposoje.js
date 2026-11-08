@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { body, matchedData } from 'express-validator';
-import { oddajZahtevek } from '../services/izposoje.js';
+import { body, param, query, matchedData } from 'express-validator';
+import { oddajZahtevek, seznamIzposoj, mojeIzposoje, odobri, zavrni } from '../services/izposoje.js';
 import { preveriVnos } from '../middleware/validacija.js';
-import { zahtevajPrijavo } from '../middleware/avtentikacija.js';
+import { zahtevajPrijavo, zahtevajVlogo } from '../middleware/avtentikacija.js';
 
 const router = Router();
+const SKRBNIK = zahtevajVlogo('skrbnik', 'admin');
+const preveriId = param('id').isInt({ min: 1 }).toInt().withMessage('Neveljaven id');
 
 // POST /api/izposoje  { opremaId, od, do, namen } – oddaja zahtevka
 router.post(
@@ -25,6 +27,42 @@ router.post(
   async (req, res) => {
     const izposoja = await oddajZahtevek(req.session.uporabnik.id, matchedData(req));
     res.status(201).json(izposoja);
+  }
+);
+
+// GET /api/izposoje?status=zahtevana – seznam za skrbnika
+router.get(
+  '/',
+  SKRBNIK,
+  query('status')
+    .isIn(['zahtevana', 'odobrena', 'zavrnjena', 'preklicana', 'izdana', 'vrnjena'])
+    .withMessage('Neveljavno stanje'),
+  preveriVnos,
+  async (req, res) => {
+    res.json(await seznamIzposoj(matchedData(req).status));
+  }
+);
+
+// GET /api/izposoje/moje – izposoje prijavljenega uporabnika
+router.get('/moje', zahtevajPrijavo, async (req, res) => {
+  res.json(await mojeIzposoje(req.session.uporabnik.id));
+});
+
+// POST /api/izposoje/:id/odobritev
+router.post('/:id/odobritev', SKRBNIK, preveriId, preveriVnos, async (req, res) => {
+  res.json(await odobri(matchedData(req).id, req.session.uporabnik.id));
+});
+
+// POST /api/izposoje/:id/zavrnitev  { razlog }
+router.post(
+  '/:id/zavrnitev',
+  SKRBNIK,
+  preveriId,
+  body('razlog').isString().trim().isLength({ min: 1, max: 500 }).withMessage('Vnesi razlog zavrnitve (1–500 znakov)'),
+  preveriVnos,
+  async (req, res) => {
+    const { id, razlog } = matchedData(req);
+    res.json(await zavrni(id, req.session.uporabnik.id, razlog));
   }
 );
 
