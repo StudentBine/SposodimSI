@@ -1,11 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { uporabnik } from './uporabnik.js'
-import DomovView from './views/DomovView.vue'
 import PrijavaView from './views/PrijavaView.vue'
 import NiNajdenoView from './views/NiNajdenoView.vue'
+import KatalogView from './views/KatalogView.vue'
+
 
 const routes = [
-  { path: '/', component: DomovView },
+  { path: '/', component: KatalogView, meta: { vloge: ['clan', 'admin', 'skrbnik'] } },
   { path: '/prijava', component: PrijavaView },
   // vse ostale poti
   { path: '/:pot(.*)*', component: NiNajdenoView },
