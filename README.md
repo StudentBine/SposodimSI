@@ -2,7 +2,7 @@
 
 Spletna aplikacija za upravljanje izposoje opreme v študentskih klubih, laboratorijih in društvih. Nadomešča Excelove tabele in neformalne dogovore: člani rezervirajo opremo za izbrani termin, skrbnik zahtevke odobri, opremo izda in prevzame ter zapiše njeno stanje, sistem pa preprečuje podvojene rezervacije in označuje zamude.
 
-Uporabniške vloge: **član**, **skrbnik opreme** in **administrator**.
+Uporabniške vloge: **član**, **skrbnik** in **administrator**.
 
 ## Tehnologije
 
@@ -47,3 +47,6 @@ Uporabniške vloge: **član**, **skrbnik opreme** in **administrator**.
 4. Testi backenda: `cd backend && npm test`.
 
 Testni uporabniki (geslo `geslo123`): `admin@sposodimsi.si`, `skrbnik@sposodimsi.si`, `clan@sposodimsi.si`, `maja@sposodimsi.si`, `blokiran@sposodimsi.si` (vrne obvestilo, da je račun blokiran - testirano).
+
+## Avtor
+- BP
