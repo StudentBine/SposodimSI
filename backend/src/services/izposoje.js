@@ -1,4 +1,4 @@
-import { pool } from '../db.js';
+import { pool, vTransakciji } from '../db.js';
 import { ApiNapaka } from '../napake.js';
 
 // Datum v berljivi obliki za sporočila, npr. "8. 11. 2026, 10:00"
@@ -57,4 +57,88 @@ export async function oddajZahtevek(clanId, { opremaId, od, do: doCas, namen }) 
     [clanId, opremaId, od, doCas, namen]
   );
   return rezultat.rows[0];
+}
+
+// Seznam izposoj v izbranem stanju za skrbnika, od najstarejšega zahtevka
+export async function seznamIzposoj(status) {
+  const rezultat = await pool.query(
+    `SELECT i.id, i.termin_od, i.termin_do, i.namen, i.status, i.ustvarjena_ob,
+            u.ime || ' ' || u.priimek AS clan,
+            o.naziv AS oprema, o.inventarna_st
+     FROM izposoja i
+     JOIN uporabnik u ON u.id = i.clan_id
+     JOIN oprema o ON o.id = i.oprema_id
+     WHERE i.status = $1
+     ORDER BY i.ustvarjena_ob`,
+    [status]
+  );
+  return rezultat.rows;
+}
+
+// Izposoje prijavljenega člana, najnovejše najprej
+export async function mojeIzposoje(clanId) {
+  const rezultat = await pool.query(
+    `SELECT i.id, i.termin_od, i.termin_do, i.namen, i.status, i.razlog_zavrnitve, i.ustvarjena_ob,
+            o.naziv AS oprema, o.inventarna_st
+     FROM izposoja i
+     JOIN oprema o ON o.id = i.oprema_id
+     WHERE i.clan_id = $1
+     ORDER BY i.ustvarjena_ob DESC`,
+    [clanId]
+  );
+  return rezultat.rows;
+}
+
+// Prebere izposojo in jo zaklene do konca transakcije (FOR UPDATE).
+// Vrže 404, če ne obstaja, in 409, če ni v pričakovanem stanju.
+async function zakleniIzposojo(odjemalec, id, pricakovanoStanje) {
+  const rezultat = await odjemalec.query('SELECT * FROM izposoja WHERE id = $1 FOR UPDATE', [id]);
+  const izposoja = rezultat.rows[0];
+  if (!izposoja) {
+    throw new ApiNapaka(404, 'NI_NAJDENO', 'Izposoja ne obstaja');
+  }
+  if (izposoja.status !== pricakovanoStanje) {
+    throw new ApiNapaka(
+      409,
+      'NEDOVOLJEN_PREHOD',
+      `Izposoja je v stanju "${izposoja.status}", pričakovano je "${pricakovanoStanje}"`
+    );
+  }
+  return izposoja;
+}
+
+// US-04: odobritev. Prekrivanje se preveri znova (US-03, kriterij 3).
+export async function odobri(id, skrbnikId) {
+  return vTransakciji(async (odjemalec) => {
+    const izposoja = await zakleniIzposojo(odjemalec, id, 'zahtevana');
+
+    // Zaklep opreme poskrbi, da dve hkratni odobritvi iste opreme potekata ena za drugo,
+    // zato druga vidi prvo in vrne 409 (US-03, kriterij 4).
+    const oprema = await odjemalec.query('SELECT status FROM oprema WHERE id = $1 FOR UPDATE', [izposoja.oprema_id]);
+    if (oprema.rows[0].status !== 'na_voljo') {
+      throw new ApiNapaka(409, 'OPREMA_NI_IZPOSODLJIVA', 'Oprema trenutno ni izposodljiva');
+    }
+
+    await preveriPrekrivanje(odjemalec, izposoja.oprema_id, izposoja.termin_od, izposoja.termin_do, izposoja.id);
+
+    const rezultat = await odjemalec.query(
+      `UPDATE izposoja SET status = 'odobrena', odobril_id = $2
+       WHERE id = $1 RETURNING id, status, odobril_id`,
+      [id, skrbnikId]
+    );
+    return rezultat.rows[0];
+  });
+}
+
+// US-04: zavrnitev z obveznim razlogom
+export async function zavrni(id, skrbnikId, razlog) {
+  return vTransakciji(async (odjemalec) => {
+    await zakleniIzposojo(odjemalec, id, 'zahtevana');
+    const rezultat = await odjemalec.query(
+      `UPDATE izposoja SET status = 'zavrnjena', odobril_id = $2, razlog_zavrnitve = $3
+       WHERE id = $1 RETURNING id, status, odobril_id, razlog_zavrnitve`,
+      [id, skrbnikId, razlog]
+    );
+    return rezultat.rows[0];
+  });
 }
