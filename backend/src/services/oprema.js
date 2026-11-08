@@ -1,4 +1,5 @@
 import { pool } from '../db.js';
+import { ApiNapaka } from '../napake.js';
 
 const NA_STRAN = 20;
 
@@ -41,4 +42,18 @@ export async function katalog({ iskanje, kategorija, od, do: doCas, samoProsto, 
 export async function seznamKategorij() {
   const rezultat = await pool.query('SELECT id, naziv FROM kategorija ORDER BY naziv');
   return rezultat.rows;
+}
+
+export async function podrobnosti(id) {
+  const rezultat = await pool.query(
+    `SELECT o.id, o.naziv, o.inventarna_st, o.opis, o.status, k.naziv AS kategorija
+     FROM oprema o
+     JOIN kategorija k ON k.id = o.kategorija_id
+     WHERE o.id = $1`,
+    [id]
+  );
+  if (rezultat.rows.length === 0) {
+    throw new ApiNapaka(404, 'NI_NAJDENO', 'Oprema ne obstaja');
+  }
+  return rezultat.rows[0];
 }
