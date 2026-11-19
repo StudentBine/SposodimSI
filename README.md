@@ -23,7 +23,8 @@ Uporabniške vloge: **član**, **skrbnik** in **administrator**.
 - [03 – Podatkovni model](docs/03-podatkovni-model.md)
 - [04 – Arhitektura in tehnološki sklad](docs/04-arhitektura-in-tehnoloski-sklad.md)
 - [05 – Uporabniške zgodbe](docs/05-uporabniske-zgodbe.md)
-- [05 – Wireframes](docs/05-wireframes.md)
+- [06 – Wireframes](docs/06-wireframes.md)
+- [07 – Pregled projekta](docs/07-pregled-projekta.md)
 - [Arhitekturne odločitve (ADR)](docs/adr/)
 
 ## Lokalni zagon
